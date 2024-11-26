@@ -6,21 +6,26 @@ const User = require('../models/user');
 
 const router = express.Router();
 
+// Validação de email
 const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-const authMiddleware = (req, res, next) => {
-  const token = req.header('x-auth-token');
-  
-  if (!token) {
-    return res.status(401).json({ message: 'Acesso negado. Nenhum token fornecido.' });
+// Middleware de autenticação
+const authenticate = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Token não fornecido ou formato inválido.' });
   }
+
+  const token = authHeader.split(' ')[1];
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || '12131415');
     req.user = decoded.user;
     next();
   } catch (err) {
-    res.status(400).json({ message: 'Token inválido.' });
+    console.error('Erro ao verificar o token:', err.message);
+    res.status(401).json({ message: 'Token inválido ou expirado.' });
   }
 };
 
@@ -28,14 +33,14 @@ const authMiddleware = (req, res, next) => {
 router.post(
   '/cadastro',
   [
-    body('nome').not().isEmpty().withMessage('Coloque seu nome'),
+    body('nome').notEmpty().withMessage('Coloque seu nome'),
     body('email').isEmail().withMessage('Digite um e-mail válido'),
     body('senha').isLength({ min: 6 }).withMessage('A senha precisa ter pelo menos 6 caracteres'),
     body('tipo')
       .isIn(['Lider', 'Gerenciador', 'Funcionario'])
       .withMessage('Tipo de usuário inválido'),
     body('equipe').custom((value, { req }) => {
-      if (req.body.tipo === 'Funcionario' || req.body.tipo === 'Lider') {
+      if (['Funcionario', 'Lider'].includes(req.body.tipo)) {
         if (!value || !Array.isArray(value) || value.length === 0) {
           throw new Error('Equipe é obrigatória para Lider ou Funcionario');
         }
@@ -73,7 +78,7 @@ router.post(
         email,
         senha: hashedPassword,
         tipo,
-        equipe: tipo === 'Funcionario' || tipo === 'Lider' ? equipe : undefined,
+        equipe: ['Funcionario', 'Lider'].includes(tipo) ? equipe : undefined,
       });
 
       await user.save();
@@ -134,11 +139,12 @@ router.post('/login', async (req, res) => {
     console.error('Erro durante o login:', err.message);
     res.status(500).send('Erro no servidor');
   }
+});
 
 // Rota de cadastro de funcionário
 router.post(
   '/cadastrofuncionario',
-  authMiddleware,
+  authenticate,
   async (req, res) => {
     const { email, senha, nome, tipo, equipe } = req.body;
 
@@ -169,7 +175,6 @@ router.post(
 
       await user.save();
       res.status(201).json({ message: 'Funcionário cadastrado com sucesso' });
-
     } catch (err) {
       console.error('Erro ao cadastrar funcionário:', err.message);
       res.status(500).send('Erro no servidor');
@@ -178,7 +183,7 @@ router.post(
 );
 
 // Rota para adicionar pontos
-router.post('/adicionar-pontos', authMiddleware, async (req, res) => {
+router.post('/adicionar-pontos', authenticate, async (req, res) => {
   const { funcionarioId, pontos } = req.body;
 
   try {
@@ -218,9 +223,6 @@ router.post('/adicionar-pontos', authMiddleware, async (req, res) => {
     console.error('Erro ao adicionar pontos:', err.message);
     res.status(500).send('Erro no servidor.');
   }
-});
-
-
 });
 
 module.exports = router;
