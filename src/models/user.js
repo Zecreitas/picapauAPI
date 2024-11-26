@@ -11,7 +11,21 @@ const userSchema = new Schema({
     required: function () {
       return this.tipo === 'Lider' || this.tipo === 'Funcionario';
     }
+  },
+  pontos: {
+    type: Number,
+    default: 0,
+    required: function () {
+      return this.tipo === 'Funcionario';
+    },
+  },
+});
+
+userSchema.pre('save', function (next) {
+  if (this.tipo !== 'Funcionario') {
+    this.pontos = undefined;
   }
+  next();
 });
 
 const User = mongoose.model('User', userSchema);

@@ -177,6 +177,50 @@ router.post(
   }
 );
 
+// Rota para adicionar pontos
+router.post('/adicionar-pontos', authMiddleware, async (req, res) => {
+  const { funcionarioId, pontos } = req.body;
+
+  try {
+    if (req.user.tipo !== 'Lider') {
+      return res.status(403).json({ message: 'Apenas líderes podem atribuir pontos.' });
+    }
+
+    if (!funcionarioId || !pontos || isNaN(pontos)) {
+      return res.status(400).json({ message: 'ID do funcionário e pontos são obrigatórios.' });
+    }
+
+    if (pontos <= 0) {
+      return res.status(400).json({ message: 'Os pontos devem ser maiores que zero.' });
+    }
+
+    const funcionario = await User.findById(funcionarioId);
+    if (!funcionario) {
+      return res.status(404).json({ message: 'Funcionário não encontrado.' });
+    }
+
+    if (funcionario.tipo !== 'Funcionario') {
+      return res.status(400).json({ message: 'Pontos só podem ser atribuídos a funcionários.' });
+    }
+
+    funcionario.pontos += pontos;
+    await funcionario.save();
+
+    res.status(200).json({
+      message: `Pontos adicionados com sucesso. O funcionário agora tem ${funcionario.pontos} pontos.`,
+      funcionario: {
+        id: funcionario._id,
+        nome: funcionario.nome,
+        pontos: funcionario.pontos,
+      },
+    });
+  } catch (err) {
+    console.error('Erro ao adicionar pontos:', err.message);
+    res.status(500).send('Erro no servidor.');
+  }
+});
+
+
 });
 
 module.exports = router;
