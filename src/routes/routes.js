@@ -3,6 +3,10 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/user');
+const Curriculo = require('../models/curriculo');
+
+const multer = require('multer');
+const path = require('path');
 
 const router = express.Router();
 
@@ -28,6 +32,8 @@ const authenticate = (req, res, next) => {
     res.status(401).json({ message: 'Token inválido ou expirado.' });
   }
 };
+
+
 
 // Rota de cadastro
 router.post(
@@ -224,5 +230,6 @@ router.post('/adicionar-pontos', authenticate, async (req, res) => {
     res.status(500).send('Erro no servidor.');
   }
 });
+
 
 module.exports = router;

@@ -4,6 +4,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const userRoutes = require('./src/routes/routes');
+const curriculoRoutes = require('./src/routes/routesCurriculo');
 
 const app = express();
 
@@ -19,6 +20,8 @@ mongoose
   .catch((err) => console.error('Erro ao conectar ao MongoDB:', err));
 
 app.use('/api', userRoutes);
+app.use('/uploads', express.static('uploads'));
+app.use('/api/curriculos', curriculoRoutes);
 
 const PORT = process.env.PORT || 3000;
 

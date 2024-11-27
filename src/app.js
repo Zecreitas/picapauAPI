@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 mongoose
-  .connect(process.env.MONGO_URI || 'mongodb://localhost:27017/meuBanco', {
+  .connect(process.env.MONGO_URI || 'mongodb://localhost:27017/picapauAPI', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -22,6 +22,7 @@ mongoose
 
 
 app.use('/api', userRoutes);
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
