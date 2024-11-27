@@ -1,8 +1,7 @@
-
-require('dotenv').config(); 
+require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const connectToDatabase = require('./src/config/database');
 const userRoutes = require('./src/routes/routes');
 const curriculoRoutes = require('./src/routes/routesCurriculo');
 
@@ -11,14 +10,10 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-mongoose
-  .connect(process.env.MONGO_URI || 'mongodb://localhost:27017/meuBanco', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log('Conectado ao MongoDB'))
-  .catch((err) => console.error('Erro ao conectar ao MongoDB:', err));
+// Conectar ao MongoDB
+connectToDatabase();
 
+// Configurar rotas
 app.use('/api', userRoutes);
 app.use('/uploads', express.static('uploads'));
 app.use('/api/curriculos', curriculoRoutes);
