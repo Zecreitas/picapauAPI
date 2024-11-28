@@ -5,6 +5,7 @@ const cors = require('cors');
 const connectToDatabase = require('./src/config/database');
 const userRoutes = require('./src/routes/routes');
 const curriculoRoutes = require('./src/routes/routesCurriculo');
+const anotacaoRoutes = require('./src/routes/routesAnotacao');
 
 const app = express();
 
@@ -22,6 +23,7 @@ connectToDatabase();
 app.use('/api', userRoutes);
 app.use('/uploads', express.static('uploads'));
 app.use('/api/curriculos', curriculoRoutes);
+app.use('/api/anotacoes', anotacaoRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
