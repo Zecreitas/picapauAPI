@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const User = require('./user');
 
 const CurriculoSchema = new mongoose.Schema({
   nome: {
@@ -23,6 +24,11 @@ const CurriculoSchema = new mongoose.Schema({
   criadoEm: {
     type: Date,
     default: Date.now,
+  },
+  gerenciador: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
   },
 });
 

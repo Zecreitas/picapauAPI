@@ -77,6 +77,7 @@ router.post(
                 email,
                 cpf,
                 arquivo: filePath,
+                gerenciador: req.user.id,
             });
 
             await curriculo.save();
@@ -88,5 +89,21 @@ router.post(
         }
     }
 );
+
+router.get('/meus-curriculos', authenticate, async (req, res) => {
+    try {
+        if (req.user.tipo !== 'Gerenciador') {
+            return res.status(403).json({ message: 'Apenas gerenciadores podem acessar seus currículos.' });
+        }
+
+        const curriculos = await Curriculo.find({ gerenciador: req.user.id });
+
+        res.status(200).json({ message: 'Currículos encontrados.', curriculos });
+    } catch (err) {
+        console.error('Erro ao buscar currículos:', err.message);
+        res.status(500).json({ message: 'Erro no servidor.' });
+    }
+});
+
 
 module.exports = router;
