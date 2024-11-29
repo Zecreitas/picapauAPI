@@ -5,7 +5,7 @@ const userSchema = new Schema({
   nome: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   senha: { type: String, required: true },
-  tipo: { type: String, enum: ['Lider', 'Funcionario'], required: true },
+  tipo: { type: String, enum: ['Lider', 'Gerenciador', 'Funcionario'], required: true },
   equipes: [{ type: Schema.Types.ObjectId, ref: 'Equipe' }]
 });
 
