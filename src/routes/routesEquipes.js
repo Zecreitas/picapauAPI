@@ -58,6 +58,11 @@ router.post('/criar-equipe', authenticate, async (req, res) => {
       return res.status(404).json({ message: 'Líder não encontrado.' });
     }
 
+    // Certifique-se de que equipes seja um array
+    if (!Array.isArray(lider.equipes)) {
+      lider.equipes = [];
+    }
+
     const novaEquipe = new Equipe({
       nome: nome.trim(),
       membros: idsValidos,
@@ -76,32 +81,35 @@ router.post('/criar-equipe', authenticate, async (req, res) => {
   }
 });
 
-// rota de pegar a equipe
+
 router.get('/listar-equipes', authenticate, async (req, res) => {
-    try {
-        if (req.user.tipo !== 'Lider') {
-            return res.status(403).json({ message: 'Apenas líderes podem acessar suas equipes.' });
-        }
-  
-        const lider = await User.findById(req.user.id)
-            .populate({
-                path: 'equipes',
-                populate: {
-                    path: 'membros',
-                    select: 'nome email tipo'
-                }
-            });
-
-        if (!lider || !lider.equipes || lider.equipes.length === 0) {
-            return res.status(404).json({ message: 'Nenhuma equipe encontrada.' });
-        }
-
-        res.status(200).json({ equipes: lider.equipes });
-    } catch (err) {
-        console.error('Erro ao listar equipes:', err.message);
-        res.status(500).json({ message: 'Erro no servidor.' });
+  try {
+    if (req.user.tipo !== 'Lider') {
+      return res.status(403).json({ message: 'Apenas líderes podem acessar suas equipes.' });
     }
+
+    const lider = await User.findById(req.user.id)
+      .populate({
+        path: 'equipes',
+        populate: {
+          path: 'membros',
+          select: 'nome email tipo'
+        }
+      });
+
+    if (!lider || !lider.equipes || lider.equipes.length === 0) {
+      return res.status(404).json({ message: 'Nenhuma equipe encontrada.' });
+    }
+
+    res.status(200).json({ equipes: lider.equipes });
+  } catch (err) {
+    console.error('Erro ao listar equipes:', err.message);
+    res.status(500).json({ message: 'Erro no servidor.' });
+  }
 });
+
+
+
 
 
 module.exports = router;

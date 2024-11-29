@@ -51,14 +51,6 @@ router.post(
     body('tipo')
       .isIn(['Lider', 'Gerenciador', 'Funcionario'])
       .withMessage('Tipo de usuário inválido'),
-    body('equipe').custom((value, { req }) => {
-      if (['Funcionario', 'Lider'].includes(req.body.tipo)) {
-        if (!value || !Array.isArray(value) || value.length === 0) {
-          throw new Error('Equipe é obrigatória para Lider ou Funcionario');
-        }
-      }
-      return true;
-    }),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -66,7 +58,7 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { nome, email, senha, tipo, equipe } = req.body;
+    const { nome, email, senha, tipo } = req.body;
 
     try {
       if (tipo === 'Funcionario') {
@@ -90,7 +82,6 @@ router.post(
         email,
         senha: hashedPassword,
         tipo,
-        equipe: ['Funcionario', 'Lider'].includes(tipo) ? equipe : undefined,
       });
 
       await user.save();
@@ -101,6 +92,7 @@ router.post(
     }
   }
 );
+
 
 // Rota de login
 router.post('/login', async (req, res) => {
