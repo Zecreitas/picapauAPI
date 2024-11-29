@@ -265,12 +265,14 @@ router.get('/meus-dados', authenticate, async (req, res) => {
     }
     
     if (user.tipo === 'Gerenciador') {
-        const recrutamentos = await Recrutamento.find({ gerenciador: user._id });
-    
-        dadosUsuario.curriculos = user.curriculos;
-        dadosUsuario.recrutamentos = recrutamentos;
-        dadosUsuario.anotacoes = anotacoes;
-    }
+      const recrutamentos = await Recrutamento.find({ gerenciador: user._id });
+  
+      const curriculos = await Curriculo.find({ gerenciador: user._id });
+  
+      dadosUsuario.curriculos = curriculos || [];
+      dadosUsuario.recrutamentos = recrutamentos;
+  }
+  
     
 
       res.status(200).json({
