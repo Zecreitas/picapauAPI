@@ -44,4 +44,22 @@ router.post('/', autenticarUsuario, verificarLider, async (req, res) => {
     }
 });
 
+router.get('/minhas-anotacoes', autenticarUsuario, verificarLider, async (req, res) => {
+    try {
+        const liderId = req.user.user.id;
+
+        const anotacoes = await Anotacao.find({ lider: liderId });
+
+        if (!anotacoes.length) {
+            return res.status(404).json({ mensagem: 'Nenhuma anotação encontrada para este líder.' });
+        }
+
+        res.status(200).json({ mensagem: 'Anotações recuperadas com sucesso.', anotacoes });
+    } catch (erro) {
+        console.error('Erro ao buscar anotações:', erro);
+        res.status(500).json({ mensagem: 'Erro ao buscar anotações.' });
+    }
+});
+
+
 module.exports = router;
