@@ -5,6 +5,9 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/user');
 const Curriculo = require('../models/curriculo');
 
+const mongoose = require('mongoose');
+
+
 const multer = require('multer');
 const path = require('path');
 

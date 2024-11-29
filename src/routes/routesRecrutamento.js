@@ -34,14 +34,29 @@ const verificarGerenciador = (req, res, next) => {
 
 router.post('/', authenticate, verificarGerenciador, async (req, res) => {
     try {
-        
+
         
     } catch (erro) {
         console.error(erro);
-        res.status(500).json({ mensagem: 'Erro ao criar anotação.' });
+        res.status(500).json({ mensagem: 'Erro ao criar recrutamento.' });
     }
 });
 
+
+router.get('/meus-recrutamentos', authenticate, async (req, res) => {
+    try {
+        if (req.user.tipo !== 'Gerenciador') {
+            return res.status(403).json({ message: 'Apenas gerenciadores podem acessar seus recrutamentos.' });
+        }
+
+        const recrutamentos = await Recrutamento.find({ gerenciador: req.user.id });
+
+        res.status(200).json({ message: 'Recrutamentos encontrados.', recrutamentos });
+    } catch (err) {
+        console.error('Erro ao buscar recrutamentos:', err.message);
+        res.status(500).json({ message: 'Erro no servidor.' });
+    }
+});
 
 
 
