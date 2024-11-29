@@ -145,46 +145,51 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Rota de cadastro de funcionário
-router.post(
-  '/cadastrofuncionario',
-  authenticate,
-  async (req, res) => {
-    const { email, senha, nome, tipo, equipe } = req.body;
+router.post('/cadastrofuncionario', authenticate, async (req, res) => {
+  const { email, senha, nome, tipo, equipeId } = req.body;
 
-    try {
-      if (req.user.tipo !== 'Gerenciador') {
-        return res.status(403).json({ message: 'Apenas gerenciadores podem cadastrar funcionários' });
-      }
-
-      if (tipo !== 'Funcionario') {
-        return res.status(400).json({ message: 'O tipo de usuário precisa ser "Funcionario"' });
-      }
-
-      let user = await User.findOne({ email });
-      if (user) {
-        return res.status(400).json({ message: 'Usuário já existe' });
-      }
-
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(senha, salt);
-
-      user = new User({
-        nome,
-        email,
-        senha: hashedPassword,
-        tipo,
-        equipe,
-      });
-
-      await user.save();
-      res.status(201).json({ message: 'Funcionário cadastrado com sucesso' });
-    } catch (err) {
-      console.error('Erro ao cadastrar funcionário:', err.message);
-      res.status(500).send('Erro no servidor');
+  try {
+    if (req.user.tipo !== 'Gerenciador') {
+      return res.status(403).json({ message: 'Apenas gerenciadores podem cadastrar funcionários' });
     }
+
+    if (tipo !== 'Funcionario') {
+      return res.status(400).json({ message: 'O tipo de usuário precisa ser "Funcionario"' });
+    }
+
+    let user = await User.findOne({ email });
+    if (user) {
+      return res.status(400).json({ message: 'Usuário já existe' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(senha, salt);
+
+    user = new User({
+      nome,
+      email,
+      senha: hashedPassword,
+      tipo,
+    });
+
+    await user.save();
+
+    if (equipeId) {
+      const equipe = await Equipe.findById(equipeId);
+      if (!equipe) {
+        return res.status(400).json({ message: 'Equipe não encontrada.' });
+      }
+      equipe.membros.push(user._id);
+      await equipe.save();
+    }
+
+    res.status(201).json({ message: 'Funcionário cadastrado com sucesso' });
+  } catch (err) {
+    console.error('Erro ao cadastrar funcionário:', err.message);
+    res.status(500).send('Erro no servidor');
   }
-);
+});
+
 
 // Rota para adicionar pontos
 router.post('/adicionar-pontos', authenticate, async (req, res) => {
