@@ -7,6 +7,7 @@ const userRoutes = require('./src/routes/routes');
 const curriculoRoutes = require('./src/routes/routesCurriculo');
 const anotacaoRoutes = require('./src/routes/routesAnotacao');
 const equipeRoutes = require('./src/routes/routesEquipes');
+const recrutamentoRoutes = require('./src/routes/routesRecrutamento');
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/curriculos', curriculoRoutes);
 app.use('/api/anotacoes', anotacaoRoutes);
 app.use('/api/equipes', equipeRoutes);
+app.use('/api/recrutamentos', recrutamentoRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
