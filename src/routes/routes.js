@@ -234,5 +234,51 @@ router.post('/adicionar-pontos', authenticate, async (req, res) => {
   }
 });
 
+// Rota para obter todos os dados de um usuário
+router.get('/meus-dados', authenticate, async (req, res) => {
+  try {
+      // Busca o usuário logado no banco de dados
+      const user = await User.findById(req.user.id)
+          .populate('equipe') // Popula os dados da equipe (se houver)
+          .populate('curriculos') // Popula os currículos (caso seja gerenciador)
+          .exec();
+
+      if (!user) {
+          return res.status(404).json({ mensagem: 'Usuário não encontrado.' });
+      }
+
+      // Inicializa os dados básicos
+      const dadosUsuario = {
+          id: user._id,
+          nome: user.nome,
+          email: user.email,
+          tipo: user.tipo,
+          pontos: user.pontos || 0,
+      };
+
+      if (user.tipo === 'Lider' || user.tipo === 'Funcionario') {
+          dadosUsuario.equipe = user.equipe;
+      }
+
+      if (user.tipo === 'Gerenciador') {
+
+          const recrutamentos = await Recrutamento.find({ gerenciador: user._id });
+          const anotacoes = [];
+
+          dadosUsuario.curriculos = user.curriculos;
+          dadosUsuario.recrutamentos = recrutamentos;
+          dadosUsuario.anotacoes = anotacoes;
+      }
+
+      res.status(200).json({
+          mensagem: 'Dados do usuário recuperados com sucesso.',
+          dadosUsuario,
+      });
+  } catch (err) {
+      console.error('Erro ao buscar os dados do usuário:', err.message);
+      res.status(500).json({ mensagem: 'Erro ao recuperar os dados do usuário.' });
+  }
+});
+
 
 module.exports = router;
