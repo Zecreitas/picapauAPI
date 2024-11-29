@@ -4,6 +4,9 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/user');
 const Curriculo = require('../models/curriculo');
+const Anotacao = require('../models/anotacao');
+const Equipe = require('../models/equipe');
+const Recrutamento = require('../models/recrutamento');
 
 const mongoose = require('mongoose');
 
@@ -234,20 +237,18 @@ router.post('/adicionar-pontos', authenticate, async (req, res) => {
   }
 });
 
-// Rota para obter todos os dados de um usuário
+// Rota para obter os dados do usuário
 router.get('/meus-dados', authenticate, async (req, res) => {
   try {
-      // Busca o usuário logado no banco de dados
       const user = await User.findById(req.user.id)
-          .populate('equipe') // Popula os dados da equipe (se houver)
-          .populate('curriculos') // Popula os currículos (caso seja gerenciador)
+          .populate('equipe')
+          .populate('curriculos')
           .exec();
 
       if (!user) {
           return res.status(404).json({ mensagem: 'Usuário não encontrado.' });
       }
 
-      // Inicializa os dados básicos
       const dadosUsuario = {
           id: user._id,
           nome: user.nome,
@@ -257,18 +258,20 @@ router.get('/meus-dados', authenticate, async (req, res) => {
       };
 
       if (user.tipo === 'Lider' || user.tipo === 'Funcionario') {
-          dadosUsuario.equipe = user.equipe;
-      }
-
-      if (user.tipo === 'Gerenciador') {
-
-          const recrutamentos = await Recrutamento.find({ gerenciador: user._id });
-          const anotacoes = [];
-
-          dadosUsuario.curriculos = user.curriculos;
-          dadosUsuario.recrutamentos = recrutamentos;
-          dadosUsuario.anotacoes = anotacoes;
-      }
+        dadosUsuario.equipe = user.equipe;
+    
+        const anotacoes = await Anotacao.find({ lider: user._id });
+        dadosUsuario.anotacoes = anotacoes || [];
+    }
+    
+    if (user.tipo === 'Gerenciador') {
+        const recrutamentos = await Recrutamento.find({ gerenciador: user._id });
+    
+        dadosUsuario.curriculos = user.curriculos;
+        dadosUsuario.recrutamentos = recrutamentos;
+        dadosUsuario.anotacoes = anotacoes;
+    }
+    
 
       res.status(200).json({
           mensagem: 'Dados do usuário recuperados com sucesso.',
@@ -279,6 +282,7 @@ router.get('/meus-dados', authenticate, async (req, res) => {
       res.status(500).json({ mensagem: 'Erro ao recuperar os dados do usuário.' });
   }
 });
+
 
 
 module.exports = router;
