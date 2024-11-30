@@ -57,8 +57,6 @@ router.post('/criar-equipe', authenticate, async (req, res) => {
     if (!lider) {
       return res.status(404).json({ message: 'Líder não encontrado.' });
     }
-
-    // Certifique-se de que equipes seja um array
     if (!Array.isArray(lider.equipes)) {
       lider.equipes = [];
     }

@@ -40,7 +40,6 @@ const authenticate = (req, res, next) => {
 };
 
 
-
 // Rota de cadastro
 router.post(
   '/cadastro',
@@ -145,6 +144,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Rota de cadastro de funcionário
 router.post('/cadastrofuncionario', authenticate, async (req, res) => {
   const { email, senha, nome, tipo, equipeId } = req.body;
 
@@ -170,6 +170,7 @@ router.post('/cadastrofuncionario', authenticate, async (req, res) => {
       email,
       senha: hashedPassword,
       tipo,
+      cadastradoPor: req.user.id
     });
 
     await user.save();
@@ -189,6 +190,48 @@ router.post('/cadastrofuncionario', authenticate, async (req, res) => {
     res.status(500).send('Erro no servidor');
   }
 });
+
+
+// Rota para listar os funcionários
+router.get('/listar-funcionarios', authenticate, async (req, res) => {
+  try {
+    if (req.user.tipo !== 'Gerenciador') {
+      return res.status(403).json({ message: 'Apenas gerenciadores podem acessar esta rota.' });
+    }
+
+    const funcionariosDiretos = await User.find({ 
+      tipo: 'Funcionario', 
+      cadastradoPor: req.user.id 
+    }).select('nome email tipo');
+
+    const gerenciador = await User.findById(req.user.id).populate({
+      path: 'equipes',
+      populate: {
+        path: 'membros',
+        match: { tipo: 'Funcionario' },
+        select: 'nome email tipo'
+      }
+    });
+
+    const membrosDasEquipes = gerenciador?.equipes?.flatMap((equipe) => equipe.membros) || [];
+
+    const todosFuncionarios = [...funcionariosDiretos, ...membrosDasEquipes];
+
+    const funcionariosUnicos = Array.from(new Map(
+      todosFuncionarios.map((funcionario) => [funcionario._id.toString(), funcionario])
+    ).values());
+
+    if (funcionariosUnicos.length === 0) {
+      return res.status(404).json({ message: 'Nenhum funcionário encontrado.' });
+    }
+
+    res.status(200).json({ funcionarios: funcionariosUnicos });
+  } catch (err) {
+    console.error('Erro ao listar funcionários:', err.message);
+    res.status(500).json({ message: 'Erro no servidor.' });
+  }
+});
+
 
 
 // Rota para adicionar pontos
